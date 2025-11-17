@@ -1,10 +1,10 @@
-# Sammy's Events Mobile and Web App
+## Sammy's Events Mobile and Web App
 This is a personal mobile and web application built by Mike Mao '29 during moments of peace and quiet.
 This project was done with some consulting from Drake McAdams '27. While this project is open-source and anyone
 may borrow code or inspiration from Sammy's Events, we would like for credit to be given to Mike Mao and Drake McAdams for
 the production and launch of Sammy's Events.
 
-# Goal of Sammy's Events
+## Goal of Sammy's Events
 Sammy's Events aims to be a all-in-one hub for Rice University students to find and engage in campus events related to 
 their major, minor, degree, or extra-curricular interests. Currently, campus events are isolated in private mailing lists, 
 preventing interested students from being able to engage in these formative activities. Currently, Rice Owl is restricted by
