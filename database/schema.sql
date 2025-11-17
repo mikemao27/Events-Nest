@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS events (
     end_time DATE,
     event_location TEXT,
 
-    club_id INTEGER,
-    FOREIGN KEY (club_id) REFERENCES clubs(id),
+    organization_id INTEGER,
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
 
     UNIQUE(source, source_id)
 );
@@ -30,19 +30,19 @@ CREATE TABLE IF NOT EXISTS users (
     UNIQUE(netID)
 );
 
-CREATE TABLE IF NOT EXISTS club_interests (
+CREATE TABLE IF NOT EXISTS organization_interests (
     user_id INTEGER NOT NULL,
-    club_id INTEGER NOT NULL,
+    organization_id INTEGER NOT NULL,
 
-    PRIMARY KEY (user_id, club_id),
+    PRIMARY KEY (user_id, organization_id),
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (club_id) REFERENCES clubs(id)
+    FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
 
-CREATE TABLE IF NOT EXISTS clubs (
+CREATE TABLE IF NOT EXISTS organizations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
-    club_description TEXT,
+    organization_description TEXT,
 
     field TEXT NOT NULL,
 
@@ -56,11 +56,11 @@ CREATE TABLE IF NOT EXISTS academic_fields (
     UNIQUE(degree_name)
 );
 
-CREATE TABLE IF NOT EXISTS club_academic_fields (
-    club_id INTEGER NOT NULL,
+CREATE TABLE IF NOT EXISTS organization_academic_fields (
+    organization_id INTEGER NOT NULL,
     academic_field_id INTEGER NOT NULL,
 
-    PRIMARY KEY (club_id, academic_field_id),
-    FOREIGN KEY (club_id) REFERENCES clubs(id),
+    PRIMARY KEY (organization_id, academic_field_id),
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
     FOREIGN KEY (academic_field_id) REFERENCES academic_fields(id)
 );

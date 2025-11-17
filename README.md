@@ -5,7 +5,7 @@ may borrow code or inspiration from Sammy's Events, we would like for credit to 
 the production and launch of Sammy's Events.
 
 ## Goal of Sammy's Events
-Sammy's Events aims to be a all-in-one hub for Rice University students to find and engage in campus events related to 
+Sammy's Events aims to be an all-in-one hub for Rice University students to find and engage in campus events related to 
 their major, minor, degree, or extra-curricular interests. Currently, campus events are isolated in private mailing lists, 
 preventing interested students from being able to engage in these formative activities. Currently, Rice Owl is restricted by
 one-per-year club fairs and club gatherings which often conflict with existing class schedules. In addition, many clubs just
@@ -19,3 +19,6 @@ interested in pops up.
 
 To make Sammy's Events more accessible, we've included many language options as well as design tweaks that make the app more
 intutiive to use based on a student's language preference, location, time-zone, etc. 
+
+## Set-up Sammy's Events for Personal Usage
+Please strictly adhere to the following instructions when setting up Sammy's Events for personal tinkering.
