@@ -20,7 +20,7 @@ def insert_academic_fields():
     academic_fields = [
         "Rice University", "Architecture", "Business", "STEM", "Humanities and Arts", 
         "Social Sciences", "Career and Professional", "Sports", 
-        "Community, Culture, and Identity", "Environmental and Sustainability",
+        "Community and Identity", "Environmental and Sustainability",
     ]
 
     for academic_field in academic_fields:
@@ -198,6 +198,11 @@ def parse_owlnest_description(html):
 
     return description, start_time, end_time, location
 
+def capitalize_location(location: str) -> str:
+    if not location:
+        return location
+    return " ".join(word.capitalize() for word in location.split())
+
 # Parse both feeds.
 def parse_rss():
     events_feed = feedparser.parse(EVENTS_RSS_URL)
@@ -213,6 +218,8 @@ def parse_rss():
         description = parse_events_description(raw_html)
         start_time, end_time = get_events_times(entry)
         location = get_event_location(entry)
+
+        location = capitalize_location(location)
 
         events.append({
             "source": "events.rice.edu",
@@ -236,6 +243,7 @@ def parse_rss():
         description, start_time, end_time, location = parse_owlnest_description(raw_html)
         free_food = has_free_food(entry)
 
+        location = capitalize_location(location)
 
         events.append({
             "source": "owlnest.rice.edu",

@@ -1,4 +1,6 @@
 /* Create a database table to store events data */
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     source TEXT NOT NULL,
@@ -8,13 +10,13 @@ CREATE TABLE IF NOT EXISTS events (
     event_description TEXT,
     source_url TEXT NOT NULL,
 
-    start_time DATE,
-    end_time DATE,
+    start_time TEXT,
+    end_time TEXT,
     event_location TEXT,
     free_food BOOLEAN,
 
     organization_id INTEGER,
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
 
     UNIQUE(source, source_id)
 );
@@ -40,7 +42,7 @@ CREATE TABLE IF NOT EXISTS organization_interests (
 
     PRIMARY KEY (user_id, organization_id),
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (organization_id) REFERENCES organizations(id)
+    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS organizations (
@@ -71,6 +73,6 @@ CREATE TABLE IF NOT EXISTS organization_academic_fields (
     academic_field_id INTEGER NOT NULL,
 
     PRIMARY KEY (organization_id, academic_field_id),
-    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     FOREIGN KEY (academic_field_id) REFERENCES academic_fields(id)
 );

@@ -33,7 +33,7 @@ async function loadDegreeCheckboxes() {
         });
     } catch (error) {
         console.error("Error Loading Academic Fields", error);
-        container.textContent = "Error loading academic fields.";
+        container.textContent = "Error Loading Academic Fields";
     }
 }
 
@@ -51,8 +51,13 @@ function setupSignupForm() {
         const phone_number = document.getElementById("phone_number").value.trim();
         const password = document.getElementById("password").value;
 
+        if (!first_name || !last_name || !netID || !email || !password) {
+            alert("Please Fill in All Required Fields.");
+            return;
+        }
+
         const degree_ids = Array.from(
-            document.querySelectorAll('#degrees-container input[type = "checkbox"]:checked')
+            document.querySelectorAll('#degrees-container input[type="checkbox"]:checked')
         ).map(cb => Number(cb.value));
 
         try {
@@ -71,7 +76,7 @@ function setupSignupForm() {
                 }),
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
             if (!response.ok || data.ok === false) {
                 alert(data.error || "Sign Up Failed");
                 return;
@@ -80,7 +85,7 @@ function setupSignupForm() {
             alert("Account Created! Please Log In");
             window.location.href = "login.html";
         } catch (error) {
-            console.error("Error signing up: ", error);
+            console.error("Error Signing Up: ", error);
             alert("Network Error");
         }
     });

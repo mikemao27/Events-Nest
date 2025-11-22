@@ -3,7 +3,7 @@
     <head>
         <meta charset = "UTF-8"/>
         <title>Profile</title>
-        <meta name = "viewport" content = "widt = device-width, initial-scale = 1"/>
+        <meta name = "viewport" content = "width=device-width, initial-scale=1"/>
         <link rel = "preconnect" href = "https://fonts.googleapis.com"/>
         <link rel = "preconnect" href = "https://fonts.gstatic.com" crossorigin/>
         <link 
@@ -16,16 +16,29 @@
     <body class = "page">
         <header>
             <nav class = "navigation_bar">
-                <a class = "logo" href = "/">Sammy's Events</a>
+                <a class = "logo" href = "index.html">Sammy's Nest</a>
 
                 <div class = "navigation_links" id = "navigation_links">
+                    <a href = "index.html" class = "nav-home">Home</a>
+
+                    <a href = "events.html" class = "nav-signed-in" style = "display:none;">Events</a>
+                    <a href = "organizations.html" class = "nav-signed-in" style = "display:none;">Organizations</a>
+
+                    <a href = "login.html" id = "nav-login" class = "nav-signed-out">Log In</a>
+
                     <a href = "about.html">About Us</a>
-                    <a class = "protected" href = "events.html">Events</a>
-                    <a class = "protected" href = "organizations.html">Organizations</a>
-                    <a class = "protected" href = "profile.html">Profile</a>
-                    <a id = "login_link" class = "primary-btn" href = "login.html">Log In</a>
-                    <a id = "logout_link" class = "primary-btn protected" style = "display:none;" href = "#">Log Out</a>
+
+                    <a href = "profile.html" id = "nav-profile" class = "nav-signed-in">
+                        <img src = "/static/images/Sammy_Owl.jpg" alt = "profile" style = "height:32px; border-radius:50%;">
+                    </a>
                 </div>
+
+                <button
+                    id = "screenreader-toggle"
+                    type = "button"
+                    class = "button-outline"
+                > Enable Screen Reader
+                </button>
             </nav>
         </header>
 
@@ -37,8 +50,13 @@
 
             <div class = "card">
                 <div class = "card-header">
-                    <div class = "card-title">Your Academic Interests</div>
+                    <div class = "card-title">Your Profile</div>
+                    <button id = "logout-button" class = "button-outline">Sign Out</button>
                 </div>
+            </div>
+
+            <div class = "card">
+                <div class = "card-title">Your Academic Interests</div>
 
                 <div class = "card-body">
                     <p>Select the Academic Fields That Best Match Your Interests</p>

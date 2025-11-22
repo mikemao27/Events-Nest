@@ -1,7 +1,7 @@
 import sqlite3
 import os
 from flask import Flask, jsonify, request, session, render_template, send_from_directory
-from db_operations import get_academic_fields, get_user_degrees, set_user_degrees
+from db_operations import get_academic_fields, get_user_degrees, set_user_degrees, verify_password
 
 app = Flask(__name__, static_folder = "../frontend", template_folder = "../frontend/display")
 
@@ -28,7 +28,12 @@ app = Flask(
     template_folder = "../frontend/display"
 )
 
-app.config["SECRET_KEY"] = "cd4e3be0753bcf403d7a260497d28f0e"
+app.secret_key = "cd4e3be0753bcf403d7a260497d28f0e"
+
+def get_database():
+    connection = sqlite3.connect(DATABASE_PATH)
+    connection.row_factory = sqlite3.Row
+    return connection
 
 @app.route("/api/signup", methods = ["POST"])
 def api_signup():
@@ -51,18 +56,19 @@ def api_signup():
 @app.route("/api/login", methods = ["POST"])
 def api_login():
     data = request.get_json() or {}
-    email = data.get("email")
-    password = data.get("password")
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
 
-    if not email or not password:
-        return jsonify({"ok": False, "error": "Email and Password Required"}), 400
+    connection = get_database()
+    cursor = connection.cursor()
+    cursor.execute("SELECT id, user_password FROM users WHERE email = ?", (email,))
+    row = cursor.fetchone()
+    connection.close()
+
+    if not row or not verify_password(password, row["user_password"]):
+        return jsonify({"ok": False, "error": "Invalid Email or Password"}), 401
     
-    ok, user_id = sign_in(email, password)
-    if not ok or user_id is None:
-        return jsonify({"ok": False, "error": "Invalid Credentials"}), 401
-    
-    session["user_id"] = user_id
-    session["email"] = email
+    session["user_id"] = row["id"]
     return jsonify({"ok": True})
 
 @app.route("/api/logout", methods = ["POST"])
@@ -76,13 +82,23 @@ def api_user():
     email = session.get("email")
 
     if not user_id:
-        return jsonify({"Authenticated": False}), 401
-    return jsonify({"Authenticated": True, "user_id": user_id, "email": email,})
+        return jsonify({"authenticated": False})
+    
+    connection = get_database()
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT id, first_name, last_name, email, netID, phone_number FROM users WHERE id = ?",
+        (user_id,),
+    )
 
-def get_database():
-    connection = sqlite3.connect(DATABASE_PATH)
-    connection.row_factory = sqlite3.Row
-    return connection
+    row = cursor.fetchone()
+    connection.close()
+
+    if not row:
+        session.clear()
+        return jsonify({"authenticated": False})
+    
+    return jsonify({"authenticated": True, "user": dict(row),})
 
 @app.route("/api/events")
 def api_events():
@@ -93,6 +109,10 @@ def api_events():
     field_filter = request.args.get("field")
     free_food_only = request.args.get("free_food") == "1"
 
+    user_id_param = user_id if user_id is not None else -1
+
+    params = [user_id_param]
+    conditions = []
     
     base = """
         SELECT
@@ -101,36 +121,36 @@ def api_events():
             event.event_description,
             event.start_time,
             event.end_time,
-            event_location,
+            event.event_location,
             event.source,
             event.source_url,
             event.free_food,
             organization.title AS organization_name,
             GROUP_CONCAT(academic_field.degree_name, ', ') AS academic_fields,
-            CASE WHEN organization_interest.user_id IS NULL THEN 0 ELSE 1 END AS followed,
-            CASE WHEN user_academic_field IS NULL THEN 0 ELSE 1 END AS maches_degrees
-        FROM events event
-        LEFT JOIN organizations organization
+            CASE
+                WHEN organization_interest.user_id IS NULL THEN 0
+                ELSE 1
+            END AS followed
+        FROM events AS event
+        LEFT JOIN organizations AS organization
             ON event.organization_id = organization.id
-        LEFT JOIN organization_academic_fields organization_academic_field
+        LEFT JOIN organization_academic_fields AS organization_academic_field
             ON organization.id = organization_academic_field.organization_id
-        LEFT JOIN academic_fields academic_field
+        LEFT JOIN academic_fields AS academic_field
             ON organization_academic_field.academic_field_id = academic_field.id
-        LEFT JOIN organization_interests organization_interest
-            ON organization_interest.organization_id = event.organization_id
+        LEFT JOIN organization_interests AS organization_interest
+            ON organization_interest.organization_id = organization.id
             AND organization_interest.user_id = ?
-        LEFT JOIN user_academic_fields user_academic_field
-            ON user_academic_field.academic_field_id = organization_academic_field.academic_field_id
-            AND user_academic_field.user_id = ?
         """
-    params = [user_id, user_id]
+    
+    conditions.append("(event.start_time IS NULL OR event.start_time >= datetime('now'))")
 
-    conditions = []
     if field_filter:
         conditions.append("academic_field.degree_name = ?")
-        params.append("field_filter")
+        params.append(field_filter)
+    
     if free_food_only:
-        conditions.appned("event.free_food = 1")
+        conditions.append("event.free_food = 1")
 
     if conditions:
         base += "WHERE " + " AND ".join(conditions)
@@ -138,10 +158,9 @@ def api_events():
     base += """
         GROUP BY event.id
         ORDER BY followed DESC,
-            matches_degrees DESC,
             event.start_time IS NULL,
             event.start_time ASC
-        LIMIT 50
+        LIMIT 500
     """
 
     cursor.execute(base, params)
@@ -153,7 +172,7 @@ def api_events():
 def api_events_followed():
     user_id = session.get("user_id")
     if not user_id:
-        return jsonify({"Authenticated": False}), 401
+        return jsonify({"authenticated": False}), 401
     
     connection = get_database()
     cursor = connection.cursor()
@@ -170,7 +189,7 @@ def api_events_followed():
             event.source_url,
             organization.title AS organization_name
         FROM events event
-        JOIN organization organization
+        JOIN organizations organization
             ON event.organization_id = organization.id
         JOIN organization_interests organization_interest
             ON organization_interest.organization_id = organization.id
@@ -183,15 +202,20 @@ def api_events_followed():
 
     rows = [dict(row) for row in cursor.fetchall()]
     connection.close()
-    return jsonify({"Authenticated": True, "Events": rows})
+    return jsonify({"authenticated": True, "events": rows})
 
 @app.route("/api/organizations")
 def api_organizations():
-    field_filter = request.args.get("field")
-    user_id = session.get("user_id")
-
     connection = get_database()
     cursor = connection.cursor()
+
+    user_id = session.get("user_id")
+    user_id_param = user_id if user_id is not None else -1
+
+    field_filter = request.args.get("field")
+
+    params = [user_id_param]
+    conditions = []
 
     base_query = """
         SELECT
@@ -199,32 +223,30 @@ def api_organizations():
             organization.title,
             organization.organization_description,
             GROUP_CONCAT(academic_field.degree_name, ', ') AS academic_fields,
-            CASE WHEN organization_interest.user_id IS NULL THEN 0 ELSE 1 END AS followed,
-            CASE WHEN user_academic_field.user_id IS NULL THN 0 ELSE 1 END AS maches_degrees
-        FROM organizations organization
-        LEFT JOIN organization_academic_fields organization_academic_field
-            ON organization.id = organization_academic_field_id.organization_id
-        LEFT JOIN academic_fields academic_field
-            ON organization_academic_field = academic_field.id
-        LEFT JOIN organization_interests organization_interest
+            CASE WHEN 
+                organization_interest.user_id IS NULL THEN 0 
+                ELSE 1 
+            END AS followed
+        FROM organizations AS organization
+        LEFT JOIN organization_academic_fields AS organization_academic_field
+            ON organization.id = organization_academic_field.organization_id
+        LEFT JOIN academic_fields AS academic_field
+            ON organization_academic_field.academic_field_id = academic_field.id
+        LEFT JOIN organization_interests AS organization_interest
             ON organization_interest.organization_id = organization.id
             AND organization_interest.user_id = ?
-        LEFT JOIN user_academic_fields user_academic_field
-            ON user_academic_field.academic_field_id = organization_academic_field.academic_field_id
-            AND user_academic_field.user_id = ?
     """
-
-    params = [user_id, user_id]
-
-    conditions = []
     if field_filter:
-        base_query += "WHERE academic_field.degree_name = ?"
+        conditions.append("academic_field.degree_name = ?")
         params.append(field_filter)
 
     if conditions:
         base_query += " WHERE " + " AND ".join(conditions)
     
-    base_query += "GROUP BY organization.id ORDER BY followed DESC, matches_degrees DESC, organization.title ASC"
+    base_query += """
+        GROUP BY organization.id
+        ORDER BY followed DESC, organization.title ASC
+    """
 
     cursor.execute(base_query, params)
     rows = [dict(row) for row in cursor.fetchall()]
@@ -272,10 +294,26 @@ def api_unfollow_organization():
 def api_followed_organizations():
     user_id = session.get("user_id")
     if not user_id:
-        return jsonify({"ok": False, "error": "Not Authenticated"}), 401
+        return jsonify({"error": "Not Authenticated"}), 401
     
-    organizations = get_followed_organizations(user_id)
-    return jsonify({"authenticated": True, "organizations": organizations})
+    connection = get_database()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            organization.id,
+            organization.title,
+            organization.organization_description
+        FROM organizations AS organization
+        JOIN organization_interests AS organization_interest
+            ON organization_interest.organization_id = organization.id
+        WHERE organization_interest.user_id = ?
+        ORDER BY organization.title ASC
+    """, (user_id,))
+
+    rows = [dict(row) for row in cursor.fetchall()]
+    connection.close()
+    return jsonify({"organizations": rows})
 
 @app.route("/api/academic-fields")
 def api_academic_fields():
@@ -287,10 +325,10 @@ def api_user_degrees():
     user_id = session.get("user_id")
 
     if not user_id:
-        return jsonify({"Authenticated": False}), 401
+        return jsonify({"authenticated": False}), 401
     
     if request.method == "GET":
-        return jsonify({"Authenticated": True, "degrees": get_user_degrees(user_id)})
+        return jsonify({"authenticated": True, "degrees": get_user_degrees(user_id)})
     
     data = request.get_json() or {}
     degree_ids = data.get("degree_ids", [])
@@ -319,7 +357,7 @@ def about_page():
 def login_page():
     return render_template("login.html")
 
-@app.route("/organization.html")
+@app.route("/organizations.html")
 def organizations_page():
     return render_template("organizations.html")
 

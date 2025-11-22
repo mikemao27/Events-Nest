@@ -90,7 +90,7 @@ header {
     transition: width 0.2s ease-out;
 }
 
-.navigation_links a:not(.primary-bin):hover::after {
+.navigation_links a:not(.primary-btn):hover::after {
     width: 100%;
 }
 
@@ -121,7 +121,7 @@ header {
 
 .page-subtitle {
     font-size: 15px;
-    font-size: var(--text-muted);
+    color: var(--text-muted);
     margin-bottom: 24px;
 }
 
@@ -204,4 +204,98 @@ header {
     margin-top: 10px;
     font-size: 13px;
     color: var(--text-muted);
+}
+
+.events-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.event-card {
+    display: flex;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.event-date {
+    background: #1e88e5;
+    color: #fff;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 70px;
+}
+
+.event-month {
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.event-day {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.event-body {
+    padding: 10px 14px;
+    flex: 1;
+}
+
+.event-title {
+    margin: 0 0 4px;
+    font-size: 18px;
+}
+
+.event-meta {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.event-description {
+    font-size: 14px;
+    margin: 0 0 6px;
+}
+
+.event-link {
+    font-size: 13px;
+    color: #1e88e5;
+    text-decoration: none;
+}
+
+.event-link:hover {
+    text-decoration: underline;
+}
+
+.organizations-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.organization-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.get-started-button {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: #1e88e5;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.get-started-button:hover {
+    background: #1565c0;
 }
