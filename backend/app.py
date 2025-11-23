@@ -437,4 +437,4 @@ def create_org_page():
     return render_template("create_organization.html")
 
 if __name__ == "__main__":
-    app.run(debug = True)
+    app.run(host = "0.0.0.0", debug = False)
